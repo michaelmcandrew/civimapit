@@ -1,6 +1,8 @@
 <?php
 
-DEFINE("CIVIMAPIT_CUSTOM_GROUP_NAME", 'Area_information');
+// We can't use the API to write view only fields, and we can't reliably look up column names
+// which means a fair amount of stuff needs to be defined here and/or we need to do a few queries.
+DEFINE("CIVIMAPIT_CUSTOM_GROUP_NAME", 'civicrm_value_area_information_1');
 DEFINE("CIVIMAPIT_COLUMN_NAME_ward", 'ward_1');
 DEFINE("CIVIMAPIT_COLUMN_NAME_council", 'council_2');
 DEFINE("CIVIMAPIT_COLUMN_NAME_constituency", 'uk_parliament_constituency_3');
@@ -33,20 +35,6 @@ function civimapit_civicrm_post( $op, $objectName, $objectId, &$objectRef ) {
 
 function civimapit_updateContactAreaInfo($contactID, $postcode) {
 	
-	$query = "
-	SELECT `id`, `table_name`
-	FROM `civicrm_custom_group`
-	WHERE `name`='".CIVIMAPIT_CUSTOM_GROUP_NAME."'
-	";
-	$cdGroupResult = CRM_Core_DAO::executeQuery( $query );
-	$cdGroupResult->fetch();
-	
-	$query = "
-	SELECT label, column_name
-	FROM civicrm_custom_field
-	WHERE custom_group_id ='{$cdGroupResult->id}'
-	";
-
 	//Look up postcode in mapit and return area information
 	$areaData = civimapit_lookupAreaData($postcode);
 		
@@ -68,7 +56,7 @@ function civimapit_updateContactAreaInfo($contactID, $postcode) {
 	}
 	
 	$params[$count] = array( $contactID, 'Integer');
-	$query = "REPLACE INTO `{$cdGroupResult->table_name}` SET `entity_id`= %{$count}, ".implode(', ',$fieldsToUpdate);
+	$query = "REPLACE INTO `".CIVIMAPIT_CUSTOM_GROUP_NAME."` SET `entity_id`= %{$count}, ".implode(', ',$fieldsToUpdate);
 	$updateResult = CRM_Core_DAO::executeQuery( $query, $params );
 	
 }
