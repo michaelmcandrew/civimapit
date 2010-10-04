@@ -1,0 +1,46 @@
+<?php
+
+DEFINE("CIVIMAPIT_CUSTOM_GROUP_NAME", 'Area_information');
+
+function civimapit_civicrm_post( $op, $objectName, $objectId, &$objectRef ) {
+	// print_r($op);	
+	// echo "\n";
+	// print_r($objectName);	
+	// echo "\n";
+	// print_r($objectId);	
+	// echo "\n";
+	// print_r($objectRef);	
+	// echo "\n";
+	require_once('api/v2/contact.php');
+	$params = array(
+		'contact_id' => $objectId
+	);
+	$contact = civicrm_contact_get($params);
+	$postcode = $contact[$objectId]['postal_code'];
+
+	if(!($op=='create' OR $op=='edit')){
+		return;
+	}
+	
+	$query = "
+	SELECT `id`, `table_name`
+	FROM `civicrm_custom_group`
+	WHERE `name`='".CIVIMAPIT_CUSTOM_GROUP_NAME."'
+	";
+	$cdGroupResult = CRM_Core_DAO::executeQuery( $query );
+	$cdGroupResult->fetch();
+	
+	$query = "
+	SELECT label, column_name
+	FROM civicrm_custom_field
+	WHERE custom_group_id ='{$cdGroupResult->id}'
+	";
+
+	$cdFieldsResult = CRM_Core_DAO::executeQuery( $query );
+	while($cdFieldsResult->fetch()) {
+		$fieldsToUpdate[]="`{$cdFieldsResult->column_name}`='test'";
+	}
+	$query = "REPLACE INTO `{$cdGroupResult->table_name}` SET `entity_id`='".$objectId."', ".implode(', ',$fieldsToUpdate);
+	$updateResult = CRM_Core_DAO::executeQuery( $query );
+	
+}
