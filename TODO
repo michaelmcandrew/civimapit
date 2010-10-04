@@ -1,3 +1,4 @@
 * error checking 
 * latitude and longitude
 * generalise the lookup of custom data names (currently defined in constants)
+* cater for two-tier areas
