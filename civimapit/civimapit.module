@@ -1,16 +1,24 @@
 <?php
 
 DEFINE("CIVIMAPIT_CUSTOM_GROUP_NAME", 'Area_information');
+DEFINE("CIVIMAPIT_COLUMN_NAME_ward", 'ward_1');
+DEFINE("CIVIMAPIT_COLUMN_NAME_council", 'council_2');
+DEFINE("CIVIMAPIT_COLUMN_NAME_constituency", 'uk_parliament_constituency_3');
+DEFINE("CIVIMAPIT_COLUMN_NAME_eu_region", 'european_region_4');
+DEFINE("CIVIMAPIT_COLUMN_NAME_ward_ons", 'ward_ons_code_5');
+DEFINE("CIVIMAPIT_COLUMN_NAME_council_ons", 'council_ons_code_6');
+
 
 function civimapit_civicrm_post( $op, $objectName, $objectId, &$objectRef ) {
-	// print_r($op);	
-	// echo "\n";
-	// print_r($objectName);	
-	// echo "\n";
-	// print_r($objectId);	
-	// echo "\n";
-	// print_r($objectRef);	
-	// echo "\n";
+
+	if($op!='create' AND $op!='edit'){
+		return;
+	}
+	if($objectName!='Individual' AND $objectName!='Organization' AND $objectName!='Household'){
+		return;
+	}
+	
+	//Get postcode from saved contact.
 	require_once('api/v2/contact.php');
 	$params = array(
 		'contact_id' => $objectId
@@ -18,9 +26,12 @@ function civimapit_civicrm_post( $op, $objectName, $objectId, &$objectRef ) {
 	$contact = civicrm_contact_get($params);
 	$postcode = $contact[$objectId]['postal_code'];
 
-	if(!($op=='create' OR $op=='edit')){
-		return;
-	}
+	// Currently, the module updates custom data attached to contact's primary address.
+	// Could switch / add data associated with addresses as well / instead
+	civimapit_updateContactAreaInfo( $objectId, $postcode );
+}
+
+function civimapit_updateContactAreaInfo($contactID, $postcode) {
 	
 	$query = "
 	SELECT `id`, `table_name`
@@ -36,11 +47,52 @@ function civimapit_civicrm_post( $op, $objectName, $objectId, &$objectRef ) {
 	WHERE custom_group_id ='{$cdGroupResult->id}'
 	";
 
-	$cdFieldsResult = CRM_Core_DAO::executeQuery( $query );
-	while($cdFieldsResult->fetch()) {
-		$fieldsToUpdate[]="`{$cdFieldsResult->column_name}`='test'";
+	//Look up postcode in mapit and return area information
+	$areaData = civimapit_lookupAreaData($postcode);
+		
+	$labelTranslation = array (
+		'ward' => CIVIMAPIT_COLUMN_NAME_ward,
+		'council' => CIVIMAPIT_COLUMN_NAME_council,
+		'constituency' => CIVIMAPIT_COLUMN_NAME_constituency,
+		'eu_region' => CIVIMAPIT_COLUMN_NAME_eu_region,
+		'ward_ons' => CIVIMAPIT_COLUMN_NAME_ward_ons,
+		'council_ons' => CIVIMAPIT_COLUMN_NAME_council_ons
+	);
+	
+	$params = array( );
+	$count = 0;
+	foreach($areaData as $k => $v) {
+		$fieldsToUpdate[]="`{$labelTranslation[$k]}`= %{$count}";
+		$params[$count] = array( $v, 'String');
+		$count++;
 	}
-	$query = "REPLACE INTO `{$cdGroupResult->table_name}` SET `entity_id`='".$objectId."', ".implode(', ',$fieldsToUpdate);
-	$updateResult = CRM_Core_DAO::executeQuery( $query );
+	
+	$params[$count] = array( $contactID, 'Integer');
+	$query = "REPLACE INTO `{$cdGroupResult->table_name}` SET `entity_id`= %{$count}, ".implode(', ',$fieldsToUpdate);
+	$updateResult = CRM_Core_DAO::executeQuery( $query, $params );
 	
 }
+
+function civimapit_lookupAreaData($postcode){
+	$mapitResult = json_decode(file_get_contents("http://mapit.mysociety.org/postcode/".urlencode($postcode)));
+
+	//Need to calculate Ward and Council using shortcuts because the name for ward and council depends on the area this postcode is in
+	$areaData['ward'] = $mapitResult->areas->{$mapitResult->shortcuts->ward}->name;
+	$areaData['council'] = $mapitResult->areas->{$mapitResult->shortcuts->council}->name;
+
+	$fieldsToReturn = array('WMC' => 'constituency',  'EUR' => 'eu_region');
+
+	foreach($mapitResult->areas as $area) {
+		if(in_array($area->type, array_keys($fieldsToReturn))){
+			$areaData[$fieldsToReturn[$area->type]]=$area->name;
+		}
+	}
+
+	$areaData['ward_ons'] = $mapitResult->areas->{$mapitResult->shortcuts->ward}->codes->ons;
+	$areaData['council_ons'] = $mapitResult->areas->{$mapitResult->shortcuts->council}->codes->ons;
+	
+	return $areaData;
+}
+
+
+
