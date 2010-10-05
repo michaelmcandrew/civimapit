@@ -74,6 +74,10 @@ function civimapit_lookupAreaData($postcode){
 		return;
 	}
 	//Need to calculate Ward and Council using shortcuts because the name for ward and council depends on the area this postcode is in
+	if(is_object($mapitResult->shortcuts->ward)){
+		CRM_Core_Session::setStatus('<br /><span style="color:red">'.ts('This demo can not correctly set postcodes in two-tier areas.  Try a postcode that is not in a two-tier area.').'</span>', true);
+		return;
+	}
 	$areaData['ward'] = $mapitResult->areas->{$mapitResult->shortcuts->ward}->name;
 	$areaData['council'] = $mapitResult->areas->{$mapitResult->shortcuts->council}->name;
 
