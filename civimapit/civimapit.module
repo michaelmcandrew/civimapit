@@ -37,6 +37,9 @@ function civimapit_updateContactAreaInfo($contactID, $postcode) {
 	
 	//Look up postcode in mapit and return area information
 	$areaData = civimapit_lookupAreaData($postcode);
+	if ($areaData == ''){
+		return;
+	}
 		
 	$labelTranslation = array (
 		'ward' => CIVIMAPIT_COLUMN_NAME_ward,
@@ -62,8 +65,14 @@ function civimapit_updateContactAreaInfo($contactID, $postcode) {
 }
 
 function civimapit_lookupAreaData($postcode){
-	$mapitResult = json_decode(file_get_contents("http://mapit.mysociety.org/postcode/".urlencode($postcode)));
-
+	if ($postcode == ''){
+		return;
+	}
+	$mapitResult = json_decode(@file_get_contents("http://mapit.mysociety.org/postcode/".urlencode($postcode)));
+	if ($mapitResult == ''){
+		CRM_Core_Session::setStatus('<br /><span style="color:red">'.ts('Could not find valid postcode data - please check your postcode. You could use the <a href="%1">mapit api</a> to do that.', array(1=>'http://mapit.mysociety.org/')).'</span>', true);
+		return;
+	}
 	//Need to calculate Ward and Council using shortcuts because the name for ward and council depends on the area this postcode is in
 	$areaData['ward'] = $mapitResult->areas->{$mapitResult->shortcuts->ward}->name;
 	$areaData['council'] = $mapitResult->areas->{$mapitResult->shortcuts->council}->name;
