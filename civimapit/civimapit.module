@@ -21,7 +21,7 @@ function civimapit_civicrm_post( $op, $objectName, $objectId, &$objectRef ) {
 	}
 	
 	//Get postcode from saved contact.
-	require_once('api/v2/contact.php');
+	require_once('api/v2/Contact.php');
 	$params = array(
 		'contact_id' => $objectId
 	);
