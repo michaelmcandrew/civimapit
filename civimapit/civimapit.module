@@ -2,13 +2,6 @@
 
 // We can't use the API to write view only fields, and we can't reliably look up column names
 // which means a fair amount of stuff needs to be defined here and/or we need to do a few queries.
-DEFINE("CIVIMAPIT_CUSTOM_GROUP_NAME", 'civicrm_value_area_information_1');
-DEFINE("CIVIMAPIT_COLUMN_NAME_ward", 'ward_1');
-DEFINE("CIVIMAPIT_COLUMN_NAME_council", 'council_2');
-DEFINE("CIVIMAPIT_COLUMN_NAME_constituency", 'uk_parliament_constituency_3');
-DEFINE("CIVIMAPIT_COLUMN_NAME_eu_region", 'european_region_4');
-DEFINE("CIVIMAPIT_COLUMN_NAME_ward_ons", 'ward_ons_code_5');
-DEFINE("CIVIMAPIT_COLUMN_NAME_council_ons", 'council_ons_code_6');
 
 
 function civimapit_civicrm_post( $op, $objectName, $objectId, &$objectRef ) {
@@ -40,26 +33,17 @@ function civimapit_updateContactAreaInfo($contactID, $postcode) {
 	if ($areaData == ''){
 		return;
 	}
-		
-	$labelTranslation = array (
-		'ward' => CIVIMAPIT_COLUMN_NAME_ward,
-		'council' => CIVIMAPIT_COLUMN_NAME_council,
-		'constituency' => CIVIMAPIT_COLUMN_NAME_constituency,
-		'eu_region' => CIVIMAPIT_COLUMN_NAME_eu_region,
-		'ward_ons' => CIVIMAPIT_COLUMN_NAME_ward_ons,
-		'council_ons' => CIVIMAPIT_COLUMN_NAME_council_ons
-	);
-	
+			
 	$params = array( );
 	$count = 0;
 	foreach($areaData as $k => $v) {
-		$fieldsToUpdate[]="`{$labelTranslation[$k]}`= %{$count}";
+		$fieldsToUpdate[]="`{$k}`= %{$count}";
 		$params[$count] = array( $v, 'String');
 		$count++;
 	}
 	
 	$params[$count] = array( $contactID, 'Integer');
-	$query = "REPLACE INTO `".CIVIMAPIT_CUSTOM_GROUP_NAME."` SET `entity_id`= %{$count}, ".implode(', ',$fieldsToUpdate);
+	$query = "REPLACE INTO `civicrm_value_area_information` SET `entity_id`= %{$count}, ".implode(', ',$fieldsToUpdate);
 	$updateResult = CRM_Core_DAO::executeQuery( $query, $params );
 	
 }
@@ -81,7 +65,10 @@ function civimapit_lookupAreaData($postcode){
 	$areaData['ward'] = $mapitResult->areas->{$mapitResult->shortcuts->ward}->name;
 	$areaData['council'] = $mapitResult->areas->{$mapitResult->shortcuts->council}->name;
 
-	$fieldsToReturn = array('WMC' => 'constituency',  'EUR' => 'eu_region');
+	$fieldsToReturn = array(
+		'WMC' => 'wm_constituency',
+		'EUR' => 'european_region'
+		);
 
 	foreach($mapitResult->areas as $area) {
 		if(in_array($area->type, array_keys($fieldsToReturn))){
@@ -89,8 +76,8 @@ function civimapit_lookupAreaData($postcode){
 		}
 	}
 
-	$areaData['ward_ons'] = $mapitResult->areas->{$mapitResult->shortcuts->ward}->codes->ons;
-	$areaData['council_ons'] = $mapitResult->areas->{$mapitResult->shortcuts->council}->codes->ons;
+	$areaData['ward_ons_code'] = $mapitResult->areas->{$mapitResult->shortcuts->ward}->codes->ons;
+	$areaData['council_ons_code'] = $mapitResult->areas->{$mapitResult->shortcuts->council}->codes->ons;
 	
 	return $areaData;
 }
