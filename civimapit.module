@@ -38,17 +38,17 @@ function civimapit_updateContactAreaInfo($contactID, $postcode) {
 	$count = 0;
 	foreach($areaData as $k => $v) {
 		$fieldsToUpdate[]="`{$k}`= %{$count}";
-		$params[$count] = array( $v, 'String');
+		$params[$count] = array( (string)$v, 'String');
 		$count++;
 	}
 	
 	$params[$count] = array( $contactID, 'Integer');
 	$query = "REPLACE INTO `civicrm_value_area_information` SET `entity_id`= %{$count}, ".implode(', ',$fieldsToUpdate);
-	$updateResult = CRM_Core_DAO::executeQuery( $query, $params );
-	
+	$updateResult = CRM_Core_DAO::executeQuery( $query, $params );	
 }
 
 function civimapit_lookupAreaData($postcode){
+
 	if ($postcode == ''){
 		return;
 	}
@@ -57,14 +57,26 @@ function civimapit_lookupAreaData($postcode){
 		CRM_Core_Session::setStatus('<br /><span style="color:red">'.ts('Could not find valid postcode data - please check your postcode. You could use the <a href="%1">mapit api</a> to do that.', array(1=>'http://mapit.mysociety.org/')).'</span>', true);
 		return;
 	}
-	//Need to calculate Ward and Council using shortcuts because the name for ward and council depends on the area this postcode is in
-	if(is_object($mapitResult->shortcuts->ward)){
-		CRM_Core_Session::setStatus('<br /><span style="color:red">'.ts('This demo can not correctly set postcodes in two-tier areas.  Try a postcode that is not in a two-tier area.').'</span>', true);
-		return;
-	}
-	$areaData['ward'] = $mapitResult->areas->{$mapitResult->shortcuts->ward}->name;
-	$areaData['council'] = $mapitResult->areas->{$mapitResult->shortcuts->council}->name;
+	//Need to calculate Ward and Council using shortcuts because the name for ward and local authority depends on the area this postcode is in
 
+	//If we are in a two tier area, we take the district ward and council, not the county ward and council because we want to retreive electoral wards	
+	if(is_object($mapitResult->shortcuts->ward)){		
+		$wardShortcut=$mapitResult->shortcuts->ward->district;
+		$councilShortcut=$mapitResult->shortcuts->council->district;
+		//If we are in northern Ireland
+		
+	} else {
+		$wardShortcut=$mapitResult->shortcuts->ward;
+		$councilShortcut=$mapitResult->shortcuts->council;
+	}
+	
+
+	$areaData['ward'] = $mapitResult->areas->{$wardShortcut}->name;
+	$areaData['council'] = $mapitResult->areas->{$councilShortcut}->name;
+	$areaData['ward_ons_code'] = $mapitResult->areas->{$wardShortcut}->codes->ons;
+	$areaData['council_ons_code'] = $mapitResult->areas->{$councilShortcut}->codes->ons;
+
+	//Other fields (apart from ward and council) are in general easier to deal with, and should be returned when present
 	$fieldsToReturn = array(
 		'WMC' => 'wm_constituency',
 		'EUR' => 'european_region'
@@ -75,9 +87,6 @@ function civimapit_lookupAreaData($postcode){
 			$areaData[$fieldsToReturn[$area->type]]=$area->name;
 		}
 	}
-
-	$areaData['ward_ons_code'] = $mapitResult->areas->{$mapitResult->shortcuts->ward}->codes->ons;
-	$areaData['council_ons_code'] = $mapitResult->areas->{$mapitResult->shortcuts->council}->codes->ons;
 	
 	return $areaData;
 }

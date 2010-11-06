@@ -36,7 +36,7 @@
       <custom_group_name>Area_information</custom_group_name>
     </CustomField>
     <CustomField>
-      <label>Council</label>
+      <label>Local authority</label>
       <data_type>String</data_type>
       <html_type>Text</html_type>
       <is_required>0</is_required>
@@ -100,7 +100,7 @@
       <custom_group_name>Area_information</custom_group_name>
     </CustomField>
     <CustomField>
-      <label>Council ONS code</label>
+      <label>Local authority ONS code</label>
       <data_type>String</data_type>
       <html_type>Text</html_type>
       <is_required>0</is_required>
