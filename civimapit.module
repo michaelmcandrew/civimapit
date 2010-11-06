@@ -72,9 +72,9 @@ function civimapit_lookupAreaData($postcode){
 	
 
 	$areaData['ward'] = $mapitResult->areas->{$wardShortcut}->name;
-	$areaData['council'] = $mapitResult->areas->{$councilShortcut}->name;
+	$areaData['la'] = $mapitResult->areas->{$councilShortcut}->name;
 	$areaData['ward_ons_code'] = $mapitResult->areas->{$wardShortcut}->codes->ons;
-	$areaData['council_ons_code'] = $mapitResult->areas->{$councilShortcut}->codes->ons;
+	$areaData['la_ons_code'] = $mapitResult->areas->{$councilShortcut}->codes->ons;
 
 	//Other fields (apart from ward and council) are in general easier to deal with, and should be returned when present
 	$fieldsToReturn = array(
