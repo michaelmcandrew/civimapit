@@ -31,6 +31,9 @@ function civimapit_updateContactAreaInfo($contactID, $postcode) {
 	//Look up postcode in mapit and return area information
 	$areaData = civimapit_lookupAreaData($postcode);
 	if ($areaData == ''){
+		$query = "DELETE FROM `civicrm_value_area_information` WHERE `entity_id`= %1";
+		$params=array( 1 => array( $contactID, 'Integer'));
+		$updateResult = CRM_Core_DAO::executeQuery( $query, $params );
 		return;
 	}
 			
