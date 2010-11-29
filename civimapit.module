@@ -56,7 +56,7 @@ function civimapit_lookupAreaData($postcode){
 		return;
 	}
 	$mapitResult = json_decode(@file_get_contents("http://mapit.mysociety.org/postcode/".urlencode($postcode)));
-	if ($mapitResult == '' OR count((array)$mapit->areas)==0){
+	if ($mapitResult == ''OR count((array)$mapitResult->areas)==0){
 		CRM_Core_Session::setStatus('<br /><span style="color:red">'.ts('Could not find valid postcode data - please check your postcode. You could use the <a href="%1">mapit api</a> to do that.', array(1=>'http://mapit.mysociety.org/')).'</span>', true);
 		return;
 	}
