@@ -1,21 +1,53 @@
 <?php
-require_once '/Users/michaelmcandrew/htdocs/civimapit/sites/all/modules/civicrm/civicrm.config.php';
-require_once('/Users/michaelmcandrew/htdocs/civimapit/sites/default/civicrm.settings.php');
+define( 'CIVICRM_CONFDIR', '/var/www/gp/sites' );
+require_once '/var/www/gp/sites/all/modules/civicrm/civicrm.config.php';
+require_once('/var/www/gp/sites/default/civicrm.settings.php');
 require_once 'CRM/Core/Config.php';
 $config = CRM_Core_Config::singleton();
 require_once('civimapit.module');
+require_once('api/v2/EntityTag.php');
+require_once '/var/www/gp/sites/all/modules/custom/gpew_setparty/gpew_setparty.module';
+
+
+$updateTagId=30;
 
 $query = "
-SELECT contact_id, postal_code
+SELECT
+contact_id,
+postal_code,
+0 as tagged
 FROM `civicrm_address`
-WHERE is_primary AND contact_id AND postal_code IS NOT NULL";
+LEFT JOIN civicrm_value_area_information ON entity_id = contact_id
+WHERE is_primary AND contact_id AND postal_code IS NOT NULL AND entity_id IS NULL
+UNION
+SELECT
+contact_id,
+postal_code,
+1 as tagged
+FROM `civicrm_address`
+LEFT JOIN civicrm_entity_tag ON entity_id = contact_id
+WHERE is_primary AND contact_id AND postal_code IS NOT NULL AND tag_id ={$updateTagId}
+";
+	
 require_once('CRM/Core/DAO.php');
-$result = CRM_Core_DAO::executeQuery( $query );
-
-echo "Updating area information.\n";
-
+$params=array();
+$result = CRM_Core_DAO::executeQuery( $query, $params );
+// print_r($query);
+// if(!$result->N){
+// 	exit;
+// }
+// print_r($result);
 while($result->fetch()){
 	civimapit_updateContactAreaInfo($result->contact_id,$result->postal_code);
+	if($result->tagged){
+		$params = array(
+			'contact_id' => $result->contact_id,
+			'tag_id'   => $updateTagId,
+		);
+		gpew_setparty_set_party($result->contact_id);
+		//$result =civicrm_entity_tag_remove( $params );
+	}
+	sleep(3);
 	echo '.';
 }
 echo "Done.\n";
