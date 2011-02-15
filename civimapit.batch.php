@@ -1,12 +1,12 @@
 <?php
 define( 'CIVICRM_CONFDIR', '/var/www/drupal.green/sites' );
-require_once '/var/www/drupal.green/sites/all/modules/civicrm/civicrm.config.php';
-require_once('/var/www/drupal.green/sites/default/civicrm.settings.php');
+require_once CIVICRM_CONFDIR.'/all/modules/civicrm/civicrm.config.php';
+require_once(CIVICRM_CONFDIR.'/default/civicrm.settings.php');
 require_once 'CRM/Core/Config.php';
 $config = CRM_Core_Config::singleton();
 require_once('civimapit.module');
 require_once('api/v2/EntityTag.php');
-require_once '/var/www/drupal.green/sites/all/modules/custom/gpew_setparty/gpew_setparty.module';
+require_once CIVICRM_CONFDIR.'/all/modules/custom/gpew_setparty/gpew_setparty.module';
 
 
 $updateTagId=30;
@@ -19,8 +19,7 @@ postal_code,
 FROM `civicrm_address`
 LEFT JOIN civicrm_value_area_information ON entity_id = contact_id
 WHERE is_primary AND contact_id AND postal_code IS NOT NULL AND entity_id IS NULL
-UNION";
-$query = "
+UNION
 SELECT
 contact_id,
 postal_code,
@@ -47,7 +46,7 @@ while($result->fetch()){
 			'contact_id' => $result->contact_id,
 			'tag_id'   => $updateTagId,
 		);
-		$result = civicrm_entity_tag_remove( $params );
+		civicrm_entity_tag_remove( $params );
 	}
 	sleep(3);
 	echo '.';
