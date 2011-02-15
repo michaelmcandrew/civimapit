@@ -1,5 +1,5 @@
 <?php
-define( 'CIVICRM_CONFDIR', '/var/www/gp/sites' );
+define( 'CIVICRM_CONFDIR', '/var/www/drupal.green/sites' );
 require_once '/var/www/drupal.green/sites/all/modules/civicrm/civicrm.config.php';
 require_once('/var/www/drupal.green/sites/default/civicrm.settings.php');
 require_once 'CRM/Core/Config.php';
