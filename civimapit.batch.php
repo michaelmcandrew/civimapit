@@ -26,7 +26,7 @@ postal_code,
 1 as tagged
 FROM `civicrm_address`
 LEFT JOIN civicrm_entity_tag ON entity_id = contact_id
-WHERE is_primary AND contact_id AND postal_code IS NOT NULL AND tag_id ={$updateTagId}
+WHERE is_primary AND contact_id AND postal_code IS NOT NULL AND tag_id = 20
 ";
 	
 require_once('CRM/Core/DAO.php');
@@ -39,12 +39,12 @@ $result = CRM_Core_DAO::executeQuery( $query, $params );
 // print_r($result);
 while($result->fetch()){
 	civimapit_updateContactAreaInfo($result->contact_id,$result->postal_code);
+	gpew_setparty_set_party($result->contact_id);
 	if($result->tagged){
 		$params = array(
 			'contact_id' => $result->contact_id,
 			'tag_id'   => $updateTagId,
 		);
-		gpew_setparty_set_party($result->contact_id);
 		//$result =civicrm_entity_tag_remove( $params );
 	}
 	sleep(3);
