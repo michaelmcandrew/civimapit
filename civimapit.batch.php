@@ -45,7 +45,7 @@ while($result->fetch()){
 			'contact_id' => $result->contact_id,
 			'tag_id'   => $updateTagId,
 		);
-		//$result =civicrm_entity_tag_remove( $params );
+		$result = civicrm_entity_tag_remove( $params );
 	}
 	sleep(3);
 	echo '.';
