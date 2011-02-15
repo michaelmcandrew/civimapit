@@ -26,7 +26,7 @@ postal_code,
 1 as tagged
 FROM `civicrm_address`
 LEFT JOIN civicrm_entity_tag ON entity_id = contact_id
-WHERE is_primary AND contact_id AND postal_code IS NOT NULL AND tag_id = 20
+WHERE is_primary AND contact_id AND postal_code IS NOT NULL AND tag_id = $updateTagId
 ";
 	
 require_once('CRM/Core/DAO.php');
