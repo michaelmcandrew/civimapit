@@ -1,12 +1,12 @@
 <?php
 define( 'CIVICRM_CONFDIR', '/var/www/gp/sites' );
-require_once '/var/www/gp/sites/all/modules/civicrm/civicrm.config.php';
-require_once('/var/www/gp/sites/default/civicrm.settings.php');
+require_once '/var/www/drupal.green/sites/all/modules/civicrm/civicrm.config.php';
+require_once('/var/www/drupal.green/sites/default/civicrm.settings.php');
 require_once 'CRM/Core/Config.php';
 $config = CRM_Core_Config::singleton();
 require_once('civimapit.module');
 require_once('api/v2/EntityTag.php');
-require_once '/var/www/gp/sites/all/modules/custom/gpew_setparty/gpew_setparty.module';
+require_once '/var/www/drupal.green/sites/all/modules/custom/gpew_setparty/gpew_setparty.module';
 
 
 $updateTagId=30;
