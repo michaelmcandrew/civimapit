@@ -19,7 +19,8 @@ postal_code,
 FROM `civicrm_address`
 LEFT JOIN civicrm_value_area_information ON entity_id = contact_id
 WHERE is_primary AND contact_id AND postal_code IS NOT NULL AND entity_id IS NULL
-UNION
+UNION";
+$query = "
 SELECT
 contact_id,
 postal_code,
@@ -38,6 +39,7 @@ $result = CRM_Core_DAO::executeQuery( $query, $params );
 // }
 // print_r($result);
 while($result->fetch()){
+	print_r($result);
 	civimapit_updateContactAreaInfo($result->contact_id,$result->postal_code);
 	gpew_setparty_set_party($result->contact_id);
 	if($result->tagged){
